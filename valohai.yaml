@@ -5,7 +5,7 @@
     parameters:
       - name: dataset_name
         default: prueba_trained_3dgs
-      - name: version_name
+      - name: dataset_version
         default: v1
     inputs:
       - name: colmap_processed_dataset
@@ -18,14 +18,14 @@
 - step:
     name: test_colmap_process_video
     image: ghcr.io/nerfstudio-project/nerfstudio:latest
-    environment: valohai-arquimea-ws12
+    environment: valohai-arquimea-gpus-all
     inputs:
       - name: input_video
         default: s3://valohai-data-730373777238/data/01JQ9/01JQ92G701ZER42M4XE683QEBE/upload/video_prueba_3dgs.mp4
     parameters:
       - name: dataset_name
         default: prueba_colmap_processed_video
-      - name: version_name
+      - name: dataset_version
         default: v1
     command:
       # 1) extraemos poses con COLMAP
@@ -33,3 +33,35 @@
 
       # 2) generamos el metadata file que “define” el dataset
       - python create_dataset.py {parameters}
+
+- pipeline:
+    name: pipeline-3dgs
+    parameters:
+      - name: colmap-dataset-name
+        type: string
+        default: prueba_colmap_processed_video
+      - name: colmap-dataset-version
+        type: string
+        default: v1
+      - name: train-dataset-name
+        type: string
+        default: prueba_trained_3dgs
+      - name: train-dataset-version
+        type: string
+        default: v1
+    nodes:
+      - name: colmap-step
+        type: execution
+        step: test_colmap_process_video
+        parameters:
+          dataset_name: {pipeline.parameters.colmap-dataset-name}
+          dataset_version: {pipeline.parameters.colmap-dataset-version}
+      - name: train-step
+        type: execution
+        step: test_train_3dgs
+        parameters:
+          dataset_name: {pipeline.parameters.train-dataset}
+          dataset_version: {pipeline.parameters.train-dataset-version}
+        inputs:
+          colmap_processed_dataset:
+            from: colmap-step.outputs.*
