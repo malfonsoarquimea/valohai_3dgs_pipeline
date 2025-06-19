@@ -1,0 +1,35 @@
+- step:
+    name: test_train_3dgs
+    image: ghcr.io/nerfstudio-project/nerfstudio:latest
+    environment: valohai-arquimea-gpus-all
+    parameters:
+      - name: dataset_name
+        default: prueba_trained_3dgs
+      - name: version_name
+        default: v1
+    inputs:
+      - name: colmap_processed_dataset
+        default: dataset://prueba_colmap_processed_video/v1
+        keep-directories: full 
+    command:
+      # 1) extraemos poses con COLMAP
+      - ns-train splatfacto --data /valohai/inputs/colmap_processed_dataset --output-dir /valohai/outputs/splatfacto_output
+      - python create_dataset.py {parameters}
+- step:
+    name: test_colmap_process_video
+    image: ghcr.io/nerfstudio-project/nerfstudio:latest
+    environment: valohai-arquimea-ws12
+    inputs:
+      - name: input_video
+        default: s3://valohai-data-730373777238/data/01JQ9/01JQ92G701ZER42M4XE683QEBE/upload/video_prueba_3dgs.mp4
+    parameters:
+      - name: dataset_name
+        default: prueba_colmap_processed_video
+      - name: version_name
+        default: v1
+    command:
+      # 1) extraemos poses con COLMAP
+      - ns-process-data video --num-downscales 1 --data /valohai/inputs/input_video/video_prueba_3dgs.mp4 --output-dir /valohai/outputs/colmap_processed_dataset
+
+      # 2) generamos el metadata file que “define” el dataset
+      - python create_dataset.py {parameters}
