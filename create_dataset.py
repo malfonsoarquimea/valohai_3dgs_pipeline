@@ -35,6 +35,8 @@ if __name__ == "__main__":
                         help="Name of the dataset.")
     parser.add_argument("--version_name", required=True,
                         help="Version name of the dataset.")
+    parser.add_argument("--directory_basename", required=True,
+                        help="path to the directory containing the dataset files")
     args = parser.parse_args()
 
     main(args.dataset_name, args.version_name)

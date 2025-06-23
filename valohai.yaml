@@ -14,7 +14,7 @@
     command:
       # 1) extraemos poses con COLMAP
       - ns-train splatfacto --data /valohai/inputs/colmap_processed_dataset --output-dir /valohai/outputs/splatfacto_output
-      - python create_dataset.py {parameters}
+      - python create_dataset.py {parameters} --directory_basename /valohai/outputs/splatfacto_output
 - step:
     name: test_colmap_process_video
     image: ghcr.io/nerfstudio-project/nerfstudio:latest
@@ -32,36 +32,4 @@
       - ns-process-data video --num-downscales 1 --data /valohai/inputs/input_video/video_prueba_3dgs.mp4 --output-dir /valohai/outputs/colmap_processed_dataset
 
       # 2) generamos el metadata file que “define” el dataset
-      - python create_dataset.py {parameters}
-
-- pipeline:
-    name: pipeline-3dgs
-    parameters:
-      - name: colmap-dataset-name
-        type: string
-        default: prueba_colmap_processed_video
-      - name: colmap-dataset-version
-        type: string
-        default: v1
-      - name: train-dataset-name
-        type: string
-        default: prueba_trained_3dgs
-      - name: train-dataset-version
-        type: string
-        default: v1
-    nodes:
-      - name: colmap-step
-        type: execution
-        step: test_colmap_process_video
-        parameters:
-          dataset_name: {pipeline.parameters.colmap-dataset-name}
-          dataset_version: {pipeline.parameters.colmap-dataset-version}
-      - name: train-step
-        type: execution
-        step: test_train_3dgs
-        parameters:
-          dataset_name: {pipeline.parameters.train-dataset}
-          dataset_version: {pipeline.parameters.train-dataset-version}
-        inputs:
-          colmap_processed_dataset:
-            from: colmap-step.outputs.*
+      - python create_dataset.py {parameters} --directory_basename /valohai/outputs/colmap_processed_dataset
